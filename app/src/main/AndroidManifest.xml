@@ -6,7 +6,8 @@
     <uses-feature android:name="android.hardware.type.watch" />
 
     <!-- Required to act as a custom watch face. -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- Required for complications to receive complication data and open the provider chooser. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Required for complications to receive complication data and open the provider chooser. -->
     <uses-permission android:name="com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA" />
 
     <application
@@ -16,16 +17,21 @@
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault"
         tools:ignore="MissingApplicationIcon">
-
         <meta-data
             android:name="com.google.android.wearable.standalone"
             android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <uses-library
+            android:name="com.google.android.wearable"
+            android:required="true" />
 
         <service
             android:name=".DigitalWatchFaceService"
             android:label="@string/my_digital_name"
             android:permission="android.permission.BIND_WALLPAPER">
-
             <meta-data
                 android:name="android.service.wallpaper"
                 android:resource="@xml/watch_face" />
@@ -35,40 +41,29 @@
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview_circular"
                 android:resource="@drawable/preview_digital_circular" />
-
             <meta-data
                 android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
-                android:value="hoo.complicationswatchface.CONFIG_COMPLICATION"/>
+                android:value="hoo.complicationswatchface.CONFIG_COMPLICATION" />
 
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
-
                 <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
             </intent-filter>
         </service>
 
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
-
-        <uses-library
-            android:name="com.google.android.wearable"
-            android:required="false" />
-
         <!-- TODO: Step 3, addWearableSupportHelperActivity -->
-        <activity android:name="android.support.wearable.complications.ComplicationHelperActivity"/>
+        <activity android:name="android.support.wearable.complications.ComplicationHelperActivity" />
 
         <!-- TODO: Step 3, addConfigActivity -->
         <activity
             android:name=".ConfigActivity"
             android:label="@string/app_name">
             <intent-filter>
-                <action android:name="hoo.complicationswatchface.CONFIG_COMPLICATION"/>
-                <category android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION"/>
-                <category android:name="android.intent.category.DEFAULT"/>
+                <action android:name="hoo.complicationswatchface.CONFIG_COMPLICATION" />
+
+                <category android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-
     </application>
-
 </manifest>

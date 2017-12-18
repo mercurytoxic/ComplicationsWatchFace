@@ -38,20 +38,27 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
     companion object {
         private val TAG = "DigitalWatchFaceService"
 
+        /**
+         * Updates rate in milliseconds for interactive mode. We update once a second since seconds
+         * are displayed in interactive mode.
+         */
+        private const val INTERACTIVE_UPDATE_RATE_MS = 1000
+
+        /**
+         * Handler message id for updating the time periodically in interactive mode.
+         */
+        private const val MSG_UPDATE_TIME = 0
+
         // TODO: Step 2, intro 1
-        const val COMPLICATION_ID_T = 0
-        const val COMPLICATION_ID_TR = 1
-        const val COMPLICATION_ID_BR = 2
-        const val COMPLICATION_ID_B = 3
-        const val COMPLICATION_ID_BL = 4
-        const val COMPLICATION_ID_TL = 5
-        const val COMPLICATION_ID_CNT = 6
+        private const val COMPLICATION_ID_T = 0
+        private const val COMPLICATION_ID_TR = 1
+        private const val COMPLICATION_ID_BR = 2
+        private const val COMPLICATION_ID_B = 3
+        private const val COMPLICATION_ID_BL = 4
+        private const val COMPLICATION_ID_TL = 5
+        private const val COMPLICATION_ID_CNT = 6
 
         private val COMPLICATION_IDS =
-                intArrayOf(
-                        COMPLICATION_ID_TL,
-                        COMPLICATION_ID_TR)
-                /*
                 intArrayOf(
                         COMPLICATION_ID_T,
                         COMPLICATION_ID_TR,
@@ -60,7 +67,6 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
                         COMPLICATION_ID_BL,
                         COMPLICATION_ID_TL,
                         COMPLICATION_ID_CNT)
-                        */
 
         // Left and right dial supported types.
         private val COMPLICATION_SUPPORTED_TYPES_NORMAL =
@@ -102,17 +108,6 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
                 else -> COMPLICATION_SUPPORTED_TYPES_NORMAL
             }
         }
-
-        /**
-         * Updates rate in milliseconds for interactive mode. We update once a second since seconds
-         * are displayed in interactive mode.
-         */
-        private const val INTERACTIVE_UPDATE_RATE_MS = 1000
-
-        /**
-         * Handler message id for updating the time periodically in interactive mode.
-         */
-        private const val MSG_UPDATE_TIME = 0
     }
 
     override fun onCreateEngine(): Engine {
@@ -203,24 +198,37 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
         private fun initializeComplications() {
             Log.d(TAG, "initializeComplications()")
 
-            mActiveComplicationDataSparseArray = SparseArray<ComplicationData>(COMPLICATION_IDS.size)
+            mComplicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
+            mActiveComplicationDataSparseArray = SparseArray(COMPLICATION_IDS.size)
 
             // Creates a ComplicationDrawable for each location where the user can render a
             // complication on the watch face. In this watch face, we only create left and right,
             // but you could add many more.
             // All styles for the complications are defined in
             // drawable/custom_complication_styles.xml.
-            val leftComplicationDrawable = getDrawable(R.drawable.custom_complication_styles) as ComplicationDrawable
-            leftComplicationDrawable.setContext(applicationContext)
+            var complicationId: Int
 
-            val rightComplicationDrawable = getDrawable(R.drawable.custom_complication_styles) as ComplicationDrawable
-            rightComplicationDrawable.setContext(applicationContext)
+            for (i in COMPLICATION_IDS.indices) {
+                complicationId = COMPLICATION_IDS[i]
 
-            // Adds new complications to a SparseArray to simplify setting styles and ambient
-            // properties for all complications, i.e., iterate over them all.
-            mComplicationDrawableSparseArray = SparseArray(COMPLICATION_IDS.size)
-            mComplicationDrawableSparseArray!!.put(COMPLICATION_ID_TL, leftComplicationDrawable)
-            mComplicationDrawableSparseArray!!.put(COMPLICATION_ID_TR, rightComplicationDrawable)
+                val style = when ( complicationId ) {
+                    COMPLICATION_ID_CNT -> R.drawable.count_complication_style
+                    else -> R.drawable.with_border_complication_style
+                }
+
+                val complicationDrawable = getDrawable(style) as ComplicationDrawable
+                complicationDrawable.setContext(applicationContext)
+
+                // Adds new complications to a SparseArray to simplify setting styles and ambient
+                // properties for all complications, i.e., iterate over them all.
+                mComplicationDrawableSparseArray!!.put(complicationId, complicationDrawable)
+            }
+
+//            setDefaultSystemComplicationProvider(
+//                    COMPLICATION_ID_CNT,
+//                    SystemProviders.UNREAD_NOTIFICATION_COUNT,
+//                    ComplicationData.TYPE_ICON
+//            )
 
             setActiveComplications(*COMPLICATION_IDS)
         }
@@ -242,7 +250,6 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
         override fun onComplicationDataUpdate(
                 complicationId: Int, complicationData: ComplicationData?) {
             Log.d(TAG, "onComplicationDataUpdate() id: " + complicationId)
-            Log.d(TAG, "onComplicationDataUpdate() data: " + (complicationData?.longText ?: "xxx"))
 
             // Adds/updates active complication data in the array.
             mActiveComplicationDataSparseArray!!.put(complicationId, complicationData)
@@ -398,51 +405,135 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
             // For most Wear devices, width and height are the same, so we just chose one (width).
 
             Log.d(TAG, "onSurfaceChanged")
+
             // TODO: Step 2, calculating ComplicationDrawable locations
-            val sizeOfComplication = width / 4
+            val sizeOfComplication = (width * 0.25).toInt()
             val midpointOfScreen = width / 2
 
             val horizontalOffset = (midpointOfScreen - sizeOfComplication) / 2
             val verticalOffset = midpointOfScreen - sizeOfComplication / 2
 
+            val tinySizeOfComplication = (width * 0.1).toInt()
+
             Log.d(TAG, "onSurfaceChanged" + sizeOfComplication + midpointOfScreen + horizontalOffset + verticalOffset)
-            val leftBounds =
+            val tlBounds =
                     // Left, Top, Right, Bottom
                     Rect(
                             horizontalOffset,
-                            verticalOffset,
+                            verticalOffset - sizeOfComplication / 2,
                             horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication)
+                            verticalOffset + sizeOfComplication - sizeOfComplication / 2)
 
-            val leftComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_TL)
-            leftComplicationDrawable!!.bounds = leftBounds
+            val tleftComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_TL)
+            tleftComplicationDrawable!!.bounds = tlBounds
 
-            val rightBounds =
+            val trBounds =
                     // Left, Top, Right, Bottom
                     Rect(
                             midpointOfScreen + horizontalOffset,
-                            verticalOffset,
+                            verticalOffset - sizeOfComplication / 2,
                             midpointOfScreen + horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication)
+                            verticalOffset + sizeOfComplication - sizeOfComplication / 2)
 
-            val rightComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_TR)
-            rightComplicationDrawable!!.bounds = rightBounds
+            val trightComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_TR)
+            trightComplicationDrawable!!.bounds = trBounds
+
+            val blBounds =
+                    // Left, Top, Right, Bottom
+                    Rect(
+                            horizontalOffset,
+                            verticalOffset + sizeOfComplication / 2,
+                            horizontalOffset + sizeOfComplication,
+                            verticalOffset + sizeOfComplication + sizeOfComplication / 2)
+
+            val bleftComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_BL)
+            bleftComplicationDrawable!!.bounds = blBounds
+
+            val brBounds =
+                    // Left, Top, Right, Bottom
+                    Rect(
+                            midpointOfScreen + horizontalOffset,
+                            verticalOffset + sizeOfComplication / 2,
+                            midpointOfScreen + horizontalOffset + sizeOfComplication,
+                            verticalOffset + sizeOfComplication + sizeOfComplication / 2)
+
+            val brightComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_BR)
+            brightComplicationDrawable!!.bounds = brBounds
+
+            val tBounds =
+                    // Left, Top, Right, Bottom
+                    Rect(
+                            midpointOfScreen - sizeOfComplication / 2,
+                            midpointOfScreen - sizeOfComplication * 3 / 2,
+                            midpointOfScreen + sizeOfComplication / 2,
+                            midpointOfScreen - sizeOfComplication / 2)
+
+            val topComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_T)
+            topComplicationDrawable!!.bounds = tBounds
+
+            val bBounds =
+                    // Left, Top, Right, Bottom
+                    Rect(
+                            midpointOfScreen - sizeOfComplication / 2,
+                            midpointOfScreen + sizeOfComplication / 2,
+                            midpointOfScreen + sizeOfComplication / 2,
+                            midpointOfScreen + sizeOfComplication * 3 / 2)
+
+            val bottomComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_B)
+            bottomComplicationDrawable!!.bounds = bBounds
+
+            val tinyBounds =
+                    // Left, Top, Right, Bottom
+                    Rect(
+                            midpointOfScreen - tinySizeOfComplication / 2,
+                            midpointOfScreen,
+                            midpointOfScreen + tinySizeOfComplication / 2,
+                            midpointOfScreen + tinySizeOfComplication)
+
+            val tinyComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_CNT)
+            tinyComplicationDrawable!!.bounds = tinyBounds
         }
 
         override fun onDraw(canvas: Canvas, bounds: Rect) {
+            val now = System.currentTimeMillis()
+            mCalendar.timeInMillis = now
+
+            drawBackground(canvas)
+            drawComplications(canvas, now)
+            drawWatchFace(canvas, bounds)
+        }
+
+        private fun drawBackground(canvas: Canvas) {
             // Draw the background.
             if (mAmbient) {
                 canvas.drawColor(Color.BLACK)
             } else {
+                canvas.drawPaint(mBackgroundPaint)
+                /*
                 canvas.drawRect(
                         0f, 0f, bounds.width().toFloat(), bounds.height().toFloat(), mBackgroundPaint)
+                */
             }
+        }
 
+        private fun drawComplications(canvas: Canvas, currentTimeMillis: Long) {
+            // TODO: Step 4, drawComplications()
+            var complicationId: Int
+            var complicationDrawable: ComplicationDrawable
+
+            Log.d(TAG, "drawComplications()")
+
+            for (i in COMPLICATION_IDS.indices) {
+                complicationId = COMPLICATION_IDS[i]
+                complicationDrawable = mComplicationDrawableSparseArray!!.get(complicationId)
+
+                complicationDrawable.draw(canvas, currentTimeMillis)
+            }
+        }
+
+        private fun drawWatchFace(canvas: Canvas, bounds: Rect) {
             // Draw HH:MM in ambient mode or HH:MM:SS in interactive mode.
-            val now = System.currentTimeMillis()
-            mCalendar.timeInMillis = now
-
-            drawComplications(canvas, now)
+            Log.d(TAG, "drawWatchFace()")
 
             val text = if (mAmbient)
                 String.format("%02d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY),
@@ -458,21 +549,6 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
             val yOffset = Math.abs(bounds.centerY() - textBounds.centerY())
 
             canvas.drawText(text, xOffset.toFloat(), yOffset.toFloat(), mTextPaint)
-        }
-
-        private fun drawComplications(canvas: Canvas, currentTimeMillis: Long) {
-            // TODO: Step 4, drawComplications()
-            var complicationId: Int
-            var complicationDrawable: ComplicationDrawable
-            Log.d(TAG, "drawComplications()")
-
-            for (i in COMPLICATION_IDS.indices) {
-                Log.d(TAG, "drawComplications()" + i)
-                complicationId = COMPLICATION_IDS[i]
-                complicationDrawable = mComplicationDrawableSparseArray!!.get(complicationId)
-
-                complicationDrawable.draw(canvas, currentTimeMillis)
-            }
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
