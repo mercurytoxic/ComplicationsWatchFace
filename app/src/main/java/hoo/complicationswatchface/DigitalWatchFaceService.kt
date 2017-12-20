@@ -103,7 +103,7 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
         fun getSupportedComplicationTypes(complicationLocation: Int): IntArray {
             // Add any other supported locations here.
             return when (complicationLocation) {
-                COMPLICATION_ID_B -> COMPLICATION_SUPPORTED_TYPES_LONG
+                //COMPLICATION_ID_T -> COMPLICATION_SUPPORTED_TYPES_LONG
                 COMPLICATION_ID_CNT -> COMPLICATION_SUPPORTED_TYPES_TINY
                 else -> COMPLICATION_SUPPORTED_TYPES_NORMAL
             }
@@ -132,9 +132,6 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
         private lateinit var mCalendar: Calendar
 
         private var mRegisteredTimeZoneReceiver = false
-
-        private var mXOffset: Float = 0F
-        private var mYOffset: Float = 0F
 
         private lateinit var mBackgroundPaint: Paint
         private lateinit var mTextPaint: Paint
@@ -172,12 +169,11 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
 
             setWatchFaceStyle(WatchFaceStyle.Builder(this@DigitalWatchFaceService)
                     .setAcceptsTapEvents(true)
+                    .setShowUnreadCountIndicator(true)
+                    .setViewProtectionMode(WatchFaceStyle.PROTECT_STATUS_BAR)
                     .build())
 
             mCalendar = Calendar.getInstance()
-
-            val resources = this@DigitalWatchFaceService.resources
-            mYOffset = resources.getDimension(R.dimen.digital_y_offset)
 
             // Initializes background.
             mBackgroundPaint = Paint().apply {
@@ -212,8 +208,8 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
                 complicationId = COMPLICATION_IDS[i]
 
                 val style = when ( complicationId ) {
-                    COMPLICATION_ID_CNT -> R.drawable.count_complication_style
-                    else -> R.drawable.with_border_complication_style
+                    COMPLICATION_ID_CNT -> R.drawable.complication_style_count
+                    else -> R.drawable.complication_style_with_border
                 }
 
                 val complicationDrawable = getDrawable(style) as ComplicationDrawable
@@ -408,87 +404,81 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
 
             // TODO: Step 2, calculating ComplicationDrawable locations
             val sizeOfComplication = (width * 0.25).toInt()
+            val tinySizeOfComplication = (width * 0.1).toInt()
             val midpointOfScreen = width / 2
 
-            val horizontalOffset = (midpointOfScreen - sizeOfComplication) / 2
-            val verticalOffset = midpointOfScreen - sizeOfComplication / 2
+            val topBottomOffset = (width * 0.04).toInt()
+            val diagonalHOffset = (width * 0.1).toInt()
+            val diagonalVOffset = (width * 0.2).toInt()
 
-            val tinySizeOfComplication = (width * 0.1).toInt()
+            Log.d(TAG, "onSurfaceChanged" + sizeOfComplication + midpointOfScreen)
 
-            Log.d(TAG, "onSurfaceChanged" + sizeOfComplication + midpointOfScreen + horizontalOffset + verticalOffset)
             val tlBounds =
                     // Left, Top, Right, Bottom
-                    Rect(
-                            horizontalOffset,
-                            verticalOffset - sizeOfComplication / 2,
-                            horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication - sizeOfComplication / 2)
+                    Rect(   diagonalHOffset,
+                            diagonalVOffset,
+                            diagonalHOffset + sizeOfComplication,
+                            diagonalVOffset + sizeOfComplication)
 
-            val tleftComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_TL)
-            tleftComplicationDrawable!!.bounds = tlBounds
+            val tlComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_TL)
+            tlComplicationDrawable!!.bounds = tlBounds
 
             val trBounds =
                     // Left, Top, Right, Bottom
-                    Rect(
-                            midpointOfScreen + horizontalOffset,
-                            verticalOffset - sizeOfComplication / 2,
-                            midpointOfScreen + horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication - sizeOfComplication / 2)
+                    Rect(   width - diagonalHOffset - sizeOfComplication,
+                            diagonalVOffset,
+                            width - diagonalHOffset,
+                            diagonalVOffset + sizeOfComplication)
 
-            val trightComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_TR)
-            trightComplicationDrawable!!.bounds = trBounds
+            val trComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_TR)
+            trComplicationDrawable!!.bounds = trBounds
 
             val blBounds =
                     // Left, Top, Right, Bottom
-                    Rect(
-                            horizontalOffset,
-                            verticalOffset + sizeOfComplication / 2,
-                            horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication + sizeOfComplication / 2)
+                    Rect(   diagonalHOffset,
+                            height - diagonalVOffset - sizeOfComplication,
+                            diagonalHOffset + sizeOfComplication,
+                            height - diagonalVOffset)
 
-            val bleftComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_BL)
-            bleftComplicationDrawable!!.bounds = blBounds
+            val blComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_BL)
+            blComplicationDrawable!!.bounds = blBounds
 
             val brBounds =
                     // Left, Top, Right, Bottom
-                    Rect(
-                            midpointOfScreen + horizontalOffset,
-                            verticalOffset + sizeOfComplication / 2,
-                            midpointOfScreen + horizontalOffset + sizeOfComplication,
-                            verticalOffset + sizeOfComplication + sizeOfComplication / 2)
+                    Rect(   width - diagonalHOffset - sizeOfComplication,
+                            height - diagonalVOffset - sizeOfComplication,
+                            width - diagonalHOffset,
+                            height - diagonalVOffset)
 
-            val brightComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_BR)
-            brightComplicationDrawable!!.bounds = brBounds
+            val brComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_BR)
+            brComplicationDrawable!!.bounds = brBounds
 
             val tBounds =
                     // Left, Top, Right, Bottom
-                    Rect(
-                            midpointOfScreen - sizeOfComplication / 2,
-                            midpointOfScreen - sizeOfComplication * 3 / 2,
+                    Rect(   midpointOfScreen - sizeOfComplication / 2,
+                            topBottomOffset,
                             midpointOfScreen + sizeOfComplication / 2,
-                            midpointOfScreen - sizeOfComplication / 2)
+                            topBottomOffset + sizeOfComplication)
 
             val topComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_T)
             topComplicationDrawable!!.bounds = tBounds
 
             val bBounds =
                     // Left, Top, Right, Bottom
-                    Rect(
-                            midpointOfScreen - sizeOfComplication / 2,
+                    Rect(   midpointOfScreen - sizeOfComplication / 2,
+                            height - topBottomOffset - sizeOfComplication,
                             midpointOfScreen + sizeOfComplication / 2,
-                            midpointOfScreen + sizeOfComplication / 2,
-                            midpointOfScreen + sizeOfComplication * 3 / 2)
+                            height - topBottomOffset)
 
             val bottomComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_B)
             bottomComplicationDrawable!!.bounds = bBounds
 
             val tinyBounds =
                     // Left, Top, Right, Bottom
-                    Rect(
-                            midpointOfScreen - tinySizeOfComplication / 2,
-                            midpointOfScreen,
+                    Rect(   midpointOfScreen - tinySizeOfComplication / 2,
+                            height - topBottomOffset * 2 - sizeOfComplication - tinySizeOfComplication,
                             midpointOfScreen + tinySizeOfComplication / 2,
-                            midpointOfScreen + tinySizeOfComplication)
+                            height - topBottomOffset * 2 - sizeOfComplication)
 
             val tinyComplicationDrawable = mComplicationDrawableSparseArray!!.get(COMPLICATION_ID_CNT)
             tinyComplicationDrawable!!.bounds = tinyBounds
@@ -591,24 +581,9 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
 
             // Load resources that have alternate values for round watches.
             val resources = this@DigitalWatchFaceService.resources
-            val isRound = insets.isRound
-            mXOffset = resources.getDimension(
-                    if (isRound)
-                        R.dimen.digital_x_offset_round
-                    else
-                        R.dimen.digital_x_offset
-            )
+            val textSize = resources.getDimension(R.dimen.time_text_size)
 
-            val textSize = resources.getDimension(
-                    if (isRound)
-                        R.dimen.digital_text_size_round
-                    else
-                        R.dimen.digital_text_size
-            )
-
-            val textSize2 = resources.getDimension( R.dimen.hhmm_text_size )
-
-            mTextPaint.textSize = textSize2
+            mTextPaint.textSize = textSize
         }
 
         /**

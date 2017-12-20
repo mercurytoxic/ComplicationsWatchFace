@@ -24,7 +24,7 @@
         android:layout_height="@dimen/settings_preview_size"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:background="@drawable/settings_watch_face_preview_background" />
+        android:background="@drawable/preview_config_background" />
 
     <ImageView
         android:id="@+id/complication_top_bg"

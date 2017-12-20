@@ -69,21 +69,21 @@ class ConfigActivity : Activity(), View.OnClickListener {
         // TODO: Step 3, initialize 1
         mSelectedComplicationId = -1
 
-        mWatchFaceComponentName = ComponentName(applicationContext, DigitalWatchFaceService::class.java!!)
+        mWatchFaceComponentName = ComponentName(applicationContext, DigitalWatchFaceService::class.java)
 
         mComplicationBackgroundSparseArray = SparseArray(mComplicationIds.size)
         mComplicationButtonSparseArray = SparseArray(mComplicationIds.size)
 
         for (i in mComplicationIds.indices) {
-            var complicationId: Int = mComplicationIds[i]
+            val complicationId: Int = mComplicationIds[i]
 
             // Sets up complication preview.
-            var complicationBackground: ImageView = findViewById(COMPLICATION_BG_IDS[i])
+            val complicationBackground: ImageView = findViewById(COMPLICATION_BG_IDS[i])
             complicationBackground.visibility = View.INVISIBLE
             mComplicationBackgroundSparseArray?.put(complicationId, complicationBackground)
 
             // Sets default as "Add Complication" icon.
-            var complicationButton: ImageButton = findViewById(COMPLICATION_BTN_IDS[i])
+            val complicationButton: ImageButton = findViewById(COMPLICATION_BTN_IDS[i])
             complicationButton.setOnClickListener(this)
             complicationButton.setImageDrawable(mDefaultAddComplicationDrawable)
             mComplicationButtonSparseArray?.put(complicationId, complicationButton)
@@ -126,8 +126,8 @@ class ConfigActivity : Activity(), View.OnClickListener {
 
     override fun onClick(view: View) {
         for (i in mComplicationIds.indices) {
-            var complicationId: Int = mComplicationIds[i]
-            var complicationButton: ImageButton = mComplicationButtonSparseArray!!.get(complicationId)
+            val complicationId: Int = mComplicationIds[i]
+            val complicationButton: ImageButton = mComplicationButtonSparseArray!!.get(complicationId)
 
             if (view == complicationButton) {
                 Log.d(TAG, "Complication Button click() id:" + complicationId)
@@ -165,8 +165,8 @@ class ConfigActivity : Activity(), View.OnClickListener {
         Log.d(TAG, "\tinfo: " + (complicationProviderInfo ?: "") )
 
         if (watchFaceComplicationId >= 0) {
-            var complicationButton: ImageButton = mComplicationButtonSparseArray!!.get(watchFaceComplicationId)
-            var complicationBackground: ImageView = mComplicationBackgroundSparseArray!!.get(watchFaceComplicationId)
+            val complicationButton: ImageButton = mComplicationButtonSparseArray!!.get(watchFaceComplicationId)
+            val complicationBackground: ImageView = mComplicationBackgroundSparseArray!!.get(watchFaceComplicationId)
 
             if (complicationProviderInfo != null) {
                 complicationButton.setImageIcon(complicationProviderInfo.providerIcon)
