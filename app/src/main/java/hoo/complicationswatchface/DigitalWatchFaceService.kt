@@ -561,7 +561,7 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
             // Draw Day of Week on the left
             val rightText =
                     String.format("%02d.%02d.%02d", mCalendar.get(Calendar.YEAR)%100,
-                        mCalendar.get(Calendar.MONTH), mCalendar.get(Calendar.DAY_OF_MONTH))
+                        mCalendar.get(Calendar.MONTH)+1, mCalendar.get(Calendar.DAY_OF_MONTH))
             val rightTextBounds = Rect()
             mLeftRightTextPaint.getTextBounds(rightText, 0, rightText.length, rightTextBounds)
             val yRightOffset = Math.abs(bounds.centerY() - rightTextBounds.centerY())
