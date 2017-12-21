@@ -134,7 +134,8 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
         private var mRegisteredTimeZoneReceiver = false
 
         private lateinit var mBackgroundPaint: Paint
-        private lateinit var mTextPaint: Paint
+        private lateinit var mMiddleTextPaint: Paint
+        private lateinit var mLeftRightTextPaint: Paint
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -169,7 +170,7 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
 
             setWatchFaceStyle(WatchFaceStyle.Builder(this@DigitalWatchFaceService)
                     .setAcceptsTapEvents(true)
-                    .setShowUnreadCountIndicator(true)
+                    .setShowUnreadCountIndicator(false)
                     .setViewProtectionMode(WatchFaceStyle.PROTECT_STATUS_BAR)
                     .build())
 
@@ -183,7 +184,13 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
             initializeComplications()
 
             // Initializes Watch Face.
-            mTextPaint = Paint().apply {
+            mMiddleTextPaint = Paint().apply {
+                typeface = NORMAL_TYPEFACE
+                isAntiAlias = true
+                color = ContextCompat.getColor(applicationContext, R.color.digital_text)
+            }
+
+            mLeftRightTextPaint = Paint().apply {
                 typeface = NORMAL_TYPEFACE
                 isAntiAlias = true
                 color = ContextCompat.getColor(applicationContext, R.color.digital_text)
@@ -346,7 +353,8 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
             mAmbient = inAmbientMode
 
             if (mLowBitAmbient) {
-                mTextPaint.isAntiAlias = !inAmbientMode
+                mMiddleTextPaint.isAntiAlias = !inAmbientMode
+                mLeftRightTextPaint.isAntiAlias = !inAmbientMode
             }
 
             // TODO: Step 2, ambient
@@ -522,10 +530,13 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
         }
 
         private fun drawWatchFace(canvas: Canvas, bounds: Rect) {
+
+            val leftRightOffset = (bounds.width() * 0.04).toFloat()
+
             // Draw HH:MM in ambient mode or HH:MM:SS in interactive mode.
             Log.d(TAG, "drawWatchFace()")
 
-            val text = if (mAmbient)
+            val middleText = if (mAmbient)
                 String.format("%02d:%02d", mCalendar.get(Calendar.HOUR_OF_DAY),
                         mCalendar.get(Calendar.MINUTE))
             else
@@ -533,12 +544,28 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
                         mCalendar.get(Calendar.MINUTE), mCalendar.get(Calendar.SECOND))
 
             // Get the Offset of middle text
-            val textBounds = Rect()
-            mTextPaint.getTextBounds(text, 0, text.length, textBounds)
-            val xOffset = Math.abs(bounds.centerX() - textBounds.centerX())
-            val yOffset = Math.abs(bounds.centerY() - textBounds.centerY())
+            val middleTextBounds = Rect()
+            mMiddleTextPaint.getTextBounds(middleText, 0, middleText.length, middleTextBounds)
+            val xOffset = Math.abs(bounds.centerX() - middleTextBounds.centerX())
+            val yOffset = Math.abs(bounds.centerY() - middleTextBounds.centerY())
 
-            canvas.drawText(text, xOffset.toFloat(), yOffset.toFloat(), mTextPaint)
+            canvas.drawText(middleText, xOffset.toFloat(), yOffset.toFloat(), mMiddleTextPaint)
+
+            // Draw Day of Week on the left
+            val leftText = mCalendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.US).toUpperCase()
+            val leftTextBounds = Rect()
+            mLeftRightTextPaint.getTextBounds(leftText, 0, leftText.length, leftTextBounds)
+            val yLeftOffset = Math.abs(bounds.centerY() - leftTextBounds.centerY())
+            canvas.drawText(leftText, leftRightOffset, yLeftOffset.toFloat(), mLeftRightTextPaint)
+
+            // Draw Day of Week on the left
+            val rightText =
+                    String.format("%02d.%02d.%02d", mCalendar.get(Calendar.YEAR)%100,
+                        mCalendar.get(Calendar.MONTH), mCalendar.get(Calendar.DAY_OF_MONTH))
+            val rightTextBounds = Rect()
+            mLeftRightTextPaint.getTextBounds(rightText, 0, rightText.length, rightTextBounds)
+            val yRightOffset = Math.abs(bounds.centerY() - rightTextBounds.centerY())
+            canvas.drawText(rightText, bounds.width() - leftRightOffset - rightTextBounds.width(), yRightOffset.toFloat(), mLeftRightTextPaint)
         }
 
         override fun onVisibilityChanged(visible: Boolean) {
@@ -581,9 +608,9 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
 
             // Load resources that have alternate values for round watches.
             val resources = this@DigitalWatchFaceService.resources
-            val textSize = resources.getDimension(R.dimen.time_text_size)
 
-            mTextPaint.textSize = textSize
+            mMiddleTextPaint.textSize = resources.getDimension(R.dimen.middle_text_size)
+            mLeftRightTextPaint.textSize = resources.getDimension(R.dimen.left_right_text_size)
         }
 
         /**
