@@ -6,7 +6,7 @@ import android.graphics.*
 import android.os.Bundle
 import android.os.Handler
 import android.os.Message
-import android.support.v4.content.ContextCompat
+import androidx.core.content.ContextCompat
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationHelperActivity
 import android.support.wearable.complications.rendering.ComplicationDrawable
@@ -552,7 +552,7 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
             canvas.drawText(middleText, xOffset.toFloat(), yOffset.toFloat(), mMiddleTextPaint)
 
             // Draw Day of Week on the left
-            val leftText = mCalendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.US).toUpperCase()
+            val leftText = mCalendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.US).toUpperCase(Locale.ROOT)
             val leftTextBounds = Rect()
             mLeftRightTextPaint.getTextBounds(leftText, 0, leftText.length, leftTextBounds)
             val yLeftOffset = Math.abs(bounds.centerY() - leftTextBounds.centerY())
@@ -560,7 +560,7 @@ class DigitalWatchFaceService : CanvasWatchFaceService() {
 
             // Draw Day of Week on the left
             val rightText =
-                    String.format("%02d.%02d.%02d", mCalendar.get(Calendar.YEAR)%100,
+                    String.format("%02d.%02d",
                         mCalendar.get(Calendar.MONTH)+1, mCalendar.get(Calendar.DAY_OF_MONTH))
             val rightTextBounds = Rect()
             mLeftRightTextPaint.getTextBounds(rightText, 0, rightText.length, rightTextBounds)

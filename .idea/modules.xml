@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/AndroidStudioProjects-ComplicationsWatchFace.iml" filepath="$PROJECT_DIR$/AndroidStudioProjects-ComplicationsWatchFace.iml" group="ComplicationsWatchFace" />
       <module fileurl="file://$PROJECT_DIR$/ComplicationsWatchFace.iml" filepath="$PROJECT_DIR$/ComplicationsWatchFace.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/ComplicationsWatchFace-app.iml" filepath="$PROJECT_DIR$/app/ComplicationsWatchFace-app.iml" group="ComplicationsWatchFace/app" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
